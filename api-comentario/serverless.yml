@@ -57,29 +57,8 @@ resources:
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
 
-    # Buckets S3 separados por stage.
-    IngestBucketDev:
+    # Bucket S3 (solo uno, su nombre depende del stage)
+    IngestBucket:
       Type: AWS::S3::Bucket
-      Condition: IsDev
       Properties:
-        BucketName: ${self:custom.ingestBucketName.dev}
-
-    IngestBucketTest:
-      Type: AWS::S3::Bucket
-      Condition: IsTest
-      Properties:
-        BucketName: ${self:custom.ingestBucketName.test}
-
-    IngestBucketProd:
-      Type: AWS::S3::Bucket
-      Condition: IsProd
-      Properties:
-        BucketName: ${self:custom.ingestBucketName.prod}
-
-Conditions:
-  IsDev:
-    Fn::Equals: [ "${self:provider.stage}", "dev" ]
-  IsTest:
-    Fn::Equals: [ "${self:provider.stage}", "test" ]
-  IsProd:
-    Fn::Equals: [ "${self:provider.stage}", "prod" ]
+        BucketName: ${self:custom.ingestBucketName.${self:provider.stage}}
