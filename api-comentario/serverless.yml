@@ -33,9 +33,9 @@ custom:
     prod: ${self:service}-prod-t_comentarios
 
   ingestBucketName:
-    dev: ${self:service}-dev-ingest-${opt:uniqueSuffix, 'gcolchado'}
-    test: ${self:service}-test-ingest-${opt:uniqueSuffix, 'gcolchado'}
-    prod: ${self:service}-prod-ingest-${opt:uniqueSuffix, 'gcolchado'}
+  dev: ${self:service}-dev-ingest-alumno
+  test: ${self:service}-test-ingest-alumno
+  prod: ${self:service}-prod-ingest-alumno
 
 resources:
   Resources:
