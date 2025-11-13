@@ -26,16 +26,17 @@ functions:
           integration: lambda
 
 custom:
-  # Nombres de recursos por stage (ajusta si quieres un sufijo más único)
   tableName:
     dev: ${self:service}-dev-t_comentarios
     test: ${self:service}-test-t_comentarios
     prod: ${self:service}-prod-t_comentarios
 
+  # dejamos los nombres fijos, sin variables dependientes
   ingestBucketName:
-  dev: ${self:service}-dev-ingest-alumno
-  test: ${self:service}-test-ingest-alumno
-  prod: ${self:service}-prod-ingest-alumno
+    dev: api-comentario-dev-ingest-alumno
+    test: api-comentario-test-ingest-alumno
+    prod: api-comentario-prod-ingest-alumno
+
 
 resources:
   Resources:
