@@ -1,11 +1,11 @@
-org: geraldocolchado
+#org: geraldocolchado
 service: api-comentario
 
 frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: python3.11        # recomendado; cambia si tu entorno soporta 3.13
+  runtime: python3.11
   region: us-east-1
   stage: ${opt:stage, 'dev'}
   memorySize: 1024
@@ -15,21 +15,7 @@ provider:
     INGEST_BUCKET: ${self:custom.ingestBucketName.${self:provider.stage}}
     STAGE: ${self:provider.stage}
   iam:
-    role:
-      statements:
-        # Permisos para DynamoDB (put item)
-        - Effect: "Allow"
-          Action:
-            - "dynamodb:PutItem"
-          Resource:
-            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tableName.${self:provider.stage}}
-        # Permisos para S3 (subir objetos al bucket de ingest)
-        - Effect: "Allow"
-          Action:
-            - "s3:PutObject"
-            - "s3:PutObjectAcl"
-          Resource:
-            - arn:aws:s3:::${self:custom.ingestBucketName.${self:provider.stage}}/*
+    role: arn:aws:iam::611279748182:role/LabRole
 
 functions:
   crear:
@@ -91,7 +77,10 @@ resources:
       Properties:
         BucketName: ${self:custom.ingestBucketName.prod}
 
-  Conditions:
-    IsDev: !Equals [ ${self:provider.stage}, dev ]
-    IsTest: !Equals [ ${self:provider.stage}, test ]
-    IsProd: !Equals [ ${self:provider.stage}, prod ]
+Conditions:
+  IsDev:
+    Fn::Equals: [ "${self:provider.stage}", "dev" ]
+  IsTest:
+    Fn::Equals: [ "${self:provider.stage}", "test" ]
+  IsProd:
+    Fn::Equals: [ "${self:provider.stage}", "prod" ]
