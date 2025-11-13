@@ -1,8 +1,6 @@
 #org: geraldocolchado
 service: api-comentario
 
-frameworkVersion: '3'
-
 provider:
   name: aws
   runtime: python3.11
