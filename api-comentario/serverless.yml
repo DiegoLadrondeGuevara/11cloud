@@ -1,0 +1,97 @@
+org: geraldocolchado
+service: api-comentario
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11        # recomendado; cambia si tu entorno soporta 3.13
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 1024
+  timeout: 20
+  environment:
+    TABLE_NAME: ${self:custom.tableName.${self:provider.stage}}
+    INGEST_BUCKET: ${self:custom.ingestBucketName.${self:provider.stage}}
+    STAGE: ${self:provider.stage}
+  iam:
+    role:
+      statements:
+        # Permisos para DynamoDB (put item)
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:PutItem"
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.tableName.${self:provider.stage}}
+        # Permisos para S3 (subir objetos al bucket de ingest)
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+            - "s3:PutObjectAcl"
+          Resource:
+            - arn:aws:s3:::${self:custom.ingestBucketName.${self:provider.stage}}/*
+
+functions:
+  crear:
+    handler: comentario.lambda_handler
+    events:
+      - http:
+          path: /comentario/crear
+          method: post
+          cors: true
+          integration: lambda
+
+custom:
+  # Nombres de recursos por stage (ajusta si quieres un sufijo más único)
+  tableName:
+    dev: ${self:service}-dev-t_comentarios
+    test: ${self:service}-test-t_comentarios
+    prod: ${self:service}-prod-t_comentarios
+
+  ingestBucketName:
+    dev: ${self:service}-dev-ingest-${opt:uniqueSuffix, 'gcolchado'}
+    test: ${self:service}-test-ingest-${opt:uniqueSuffix, 'gcolchado'}
+    prod: ${self:service}-prod-ingest-${opt:uniqueSuffix, 'gcolchado'}
+
+resources:
+  Resources:
+    # DynamoDB table (ya estaba en tu yml)
+    TablaComentarios:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName.${self:provider.stage}}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
+    # Buckets S3 separados por stage.
+    IngestBucketDev:
+      Type: AWS::S3::Bucket
+      Condition: IsDev
+      Properties:
+        BucketName: ${self:custom.ingestBucketName.dev}
+
+    IngestBucketTest:
+      Type: AWS::S3::Bucket
+      Condition: IsTest
+      Properties:
+        BucketName: ${self:custom.ingestBucketName.test}
+
+    IngestBucketProd:
+      Type: AWS::S3::Bucket
+      Condition: IsProd
+      Properties:
+        BucketName: ${self:custom.ingestBucketName.prod}
+
+  Conditions:
+    IsDev: !Equals [ ${self:provider.stage}, dev ]
+    IsTest: !Equals [ ${self:provider.stage}, test ]
+    IsProd: !Equals [ ${self:provider.stage}, prod ]
